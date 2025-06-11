@@ -15,7 +15,14 @@ and including it in your projejct.
 #include "elog.h"
 ```
 
-And there you have it.
+The file can be copied from the dropdown below if you're too lazy to leave the
+readme and click on the `elog.h` file about 2.5 mouse scrolls up from this line.
+
+```c title="elog.h"
+{%include "elog.h" %}
+```
+
+
 
 You can also install it by downloading the file directly into your project
 or directory of choice.
