@@ -216,13 +216,13 @@ or directory of choice.
 With Curl:
 
 ```bash
-curl -o elog.h https://raw.githubusercontent.com/fluffysnnowman/elog/master/elog.h
+curl -o elog.h https://raw.githubusercontent.com/FluffySnowman/elog/refs/heads/master/elog.h
 ```
 
 Wtih Wget:
 
 ```bash
-wget https://raw.githubusercontent.com/fluffysnnowman/elog/master/elog.h
+wget https://raw.githubusercontent.com/FluffySnowman/elog/refs/heads/master/elog.h
 ```
 
 ## Usage
