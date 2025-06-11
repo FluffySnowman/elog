@@ -1,0 +1,34 @@
+# dev env
+
+.ispf_f/
+.ispf_f
+
+# nvim shit
+
+.nvim
+.nvim/
+
+._proj_undo
+._proj_undo/
+
+# net
+
+.htp
+.htp/
+
+# notes
+# scratch.org
+# scratch.md
+
+# sessions
+
+Session.vim
+Session[1,2,3].vim
+
+# buildout put
+release/
+elog_test
+
+.zig-cache/
+zig-out/
+
