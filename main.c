@@ -3,8 +3,8 @@
 int main(void) {
 
     // testing after adding macros
-    // elog_init("master_log.retard", "READABLE,FILECOLOR");
-    elog_init("master_log.retard", "TEA,FILECOLOR");
+    elog_init("master_log.retard", "READABLE,FILECOLOR");
+    // elog_init("master_log.retard", "TEA,FILECOLOR");
     ELOG_WARN("warning with macros");
 
     // elog_init(NULL, NULL);
