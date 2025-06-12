@@ -3,9 +3,14 @@
 int main(void) {
 
     // testing after adding macros
-    elog_init("master_log.retard", "READABLE,FILECOLOR");
+    // elog_init("master_log.retard", "READABLE,FILECOLOR,FILEONLY");
+    elog_init("master_log.retard", "READABLE,FILEONLY");
+    // elog_init("master_log.retard", "BURGER,FILECOLOR,FILEONLY");
     // elog_init("master_log.retard", "TEA,FILECOLOR");
-    ELOG_WARN("warning with macros");
+    ELOG_INFO("this is readable");
+    ELOG_WARN("hello three");
+    ELOG_DEBUG("bedugging");
+    ELOG_ERROR("yeet error");
 
     // elog_init(NULL, NULL);
     // elog(LOG_INFO, "this should be in stdou by default?");

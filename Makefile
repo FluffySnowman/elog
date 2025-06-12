@@ -2,6 +2,9 @@
 # artificatetuhetu
 
 CC := cc
+# CC := cc -std=c23
+# CC := cc -std=c90
+# CC := cc -std=gnu17
 # uncomment to switch to gcc. uncommenting this line will also officially turn
 # you into a homosexual. proceed with caution. 4chan is watching.
 # CC := gcc

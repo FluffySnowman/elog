@@ -33,7 +33,7 @@ readme and click on the `elog.h` file about 2.5 mouse scrolls up from this line.
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
+// #include <unistd.h>
 
 typedef enum {
     LOG_DEBUG,
@@ -52,6 +52,7 @@ typedef enum {
 static FILE*    log_file   = NULL;
 static TimeMode time_mode  = TM_ORIG;
 static int      file_color = 0;
+static int      file_only  = 0;
 
 #define COLOR_DEBUG "\x1b[36m"
 #define COLOR_INFO "\x1b[32m"
@@ -62,6 +63,16 @@ static int      file_color = 0;
 static const char* level_strs[]   = {"DBG", "INF", "WRN", "ERR"};
 static const char* level_colors[] = {COLOR_DEBUG, COLOR_INFO, COLOR_WARN, COLOR_ERROR};
 
+// compatibility with other c std's so this is `strdup` yeet
+static char* string_duplicate(const char* s) {
+    size_t len = strlen(s) + 1;
+    char*  p   = malloc(len);
+    if (p) {
+        memcpy(p, s, len);
+    }
+    return p;
+}
+
 static inline int logger_init(const char* filename, const char* options) {
     if (filename && filename[0]) {
         log_file = fopen(filename, "a");
@@ -69,8 +80,9 @@ static inline int logger_init(const char* filename, const char* options) {
     }
     time_mode  = TM_ORIG;
     file_color = 0;
+    file_only  = 0;
     if (options) {
-        char* opts = strdup(options);
+        char* opts = string_duplicate(options);
         char* tok  = strtok(opts, " ,");
         // clang can clang deez nuts with its shitty formatting shit
         // clang-format off
@@ -79,6 +91,7 @@ static inline int logger_init(const char* filename, const char* options) {
             else if (strcmp(tok, "BURGER")   == 0) time_mode  = TM_BURGER;
             else if (strcmp(tok, "READABLE") == 0) time_mode  = TM_READABLE;
             else if (strcmp(tok, "FILECOLOR")== 0) file_color = 1;
+            else if (strcmp(tok, "FILEONLY") == 0) file_only  = 1;
             tok = strtok(NULL, " ,");
         }
         // clang-format on
@@ -93,16 +106,22 @@ static inline void log_log(LogLevel lvl, const char* fmt, ...) {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
 
+    time_t    now = ts.tv_sec;
     struct tm tm;
-    localtime_r(&ts.tv_sec, &tm);
+    if (localtime(&now))
+        tm = *localtime(&now);
+    else
+        memset(&tm, 0, sizeof tm);
+
+    int ms = ts.tv_nsec / 1000000;
 
     char tbuf[64];
     switch (time_mode) {
         case TM_TEA:
             snprintf(tbuf, sizeof tbuf,
-                     "%02d-%02d-%02d %02d:%02d",
+                     "%02d-%02d-%02d %02d:%02d:%02d.%03d",
                      tm.tm_mday, tm.tm_mon + 1, tm.tm_year % 100,
-                     tm.tm_hour, tm.tm_min);
+                     tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
             break;
 
         case TM_BURGER:
@@ -113,9 +132,9 @@ static inline void log_log(LogLevel lvl, const char* fmt, ...) {
             //          tm.tm_hour, tm.tm_min);
 
             snprintf(tbuf, sizeof tbuf,
-                     "%02d-%02d-%02d %02d:%02d",
+                     "%02d-%02d-%02d %02d:%02d:%02d.%03d",
                      tm.tm_mon + 1, tm.tm_mday, tm.tm_year % 100,
-                     tm.tm_hour, tm.tm_min);
+                     tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
             break;
 
         case TM_READABLE: {
@@ -133,7 +152,7 @@ static inline void log_log(LogLevel lvl, const char* fmt, ...) {
             snprintf(part2, sizeof part2,
                      "%02d:%02d",
                      tm.tm_hour, tm.tm_min);
-            int ms = ts.tv_nsec / 1000000;
+            // int ms = ts.tv_nsec / 1000000;
             snprintf(part3, sizeof part3,
                      "%02d.%03ds",
                      tm.tm_sec, ms);
@@ -143,8 +162,8 @@ static inline void log_log(LogLevel lvl, const char* fmt, ...) {
         case TM_ORIG:
         default:
             snprintf(tbuf, sizeof tbuf,
-                     "%02d:%02d",
-                     tm.tm_hour, tm.tm_min);
+                     "%02d:%02d:%02d.%03d",
+                     tm.tm_hour, tm.tm_min, tm.tm_sec, ms);
             break;
     }
 
@@ -167,11 +186,13 @@ static inline void log_log(LogLevel lvl, const char* fmt, ...) {
     snprintf(final_msg, sizeof final_msg,
              "%s", mbuf);
 
-    fprintf(stdout,
-            "%s %s%s%s %s\n",
-            tbuf,
-            level_colors[lvl], level_strs[lvl], COLOR_RESET,
-            final_msg);
+    if (!file_only) {
+        fprintf(stdout,
+                "%s %s%s%s %s\n",
+                tbuf,
+                level_colors[lvl], level_strs[lvl], COLOR_RESET,
+                final_msg);
+    }
 
     if (log_file) {
         if (file_color) {
@@ -268,5 +289,44 @@ The `READABLE` format is recomended for most use cases/projects that don't
 require a specific format and just want to have a human readable log
 file/console.
 
+### Options
+
+#### Colours / Colors (*if you're in the divided states of america*)
+
+If you wish to have ANSI codes written to the log file itself, use
+
+- `,FILECOLOR` after the log format (include the comma) to enable it.
+
+^ To disable- remove `,FILECOLOR` from the string.
+
+#### File logging only
+
+If you only want to log to a file and not to stdout, specify the
+
+- `,FILEONLY` option in the string after the log format in the init function-
+  AND IT MUST BE THE LAST OPTION IN THE STRING.
+
+This will write to the file and nothing else. ANSI codes can be written to the
+file too by specifying `,FILECOLOR` before it.
+
+### Option Examples
+
+To have colours (ANSI codes) in the log file, use:
+
+```c
+elog_init("master_log.log", "TEA,FILECOLOR");
+```
+
+To only log to a file and not to stdout use:
+
+```c
+elog_init("master_log.log", "TEA,FILEONLY");
+```
+
+To log to the file with colors and NOT to stdout use
+
+```c
+elog_init("master_log.log", "TEA,FILECOLOR,FILEONLY");
+```
 
 
